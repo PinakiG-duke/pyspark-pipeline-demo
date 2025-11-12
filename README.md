@@ -58,11 +58,29 @@ Purpose: Enables distributed aggregation of trip volumes, fares, and tips by mon
 | **1. Dataset Selection & Loading (10 pts)** | Read 3 Parquet files + zone CSV using `SparkSession.read`. Schema mismatch handled via `unionByName` after casting columns.                                     | `Dataset_Loading.jpg`                                               |
 | **2. Transformations (25 pts)**             | Used `withColumn` for derived columns (`pickup_date`, `month`, `tip_pct`), 2+ filters for valid fares and passenger counts.                                     | `Transformation_Filtering.jpg`                                      |
 | **3. SQL Queries (20 pts)**                 | Two queries: (1) Top 10 zones by revenue per month using window function; (2) Daily average distance and tips.                                                  | `SQL1_Execution.jpg`, `SQL2_Execution.jpg`                          |
-| **4. Optimization (10 pts)**                | Early filtering, column pruning, `broadcast(zones)`, `coalesce(4)` to reduce shuffle. All visible in `.explain()`.                                              | `Execution_Plan.jpg`, notebook cells                                |
+| **4. Optimization (10 pts)**                | Early filtering, column pruning, `broadcast(zones)`, `coalesce(4)` to reduce shuffle. All visible in `.explain()`.                                              | `Execution_Plan.pdf`, notebook cells                                |
 | **5. Output Writing (5 pts)**               | Wrote aggregated results as Parquet partitioned by month in `outputs/zone_month_summary_parquet/`.                                                              | `Output_Writing.jpg`                                                |
 | **6. Performance Analysis (10 pts)**        | `.explain(mode="formatted")` outputs show Catalyst optimizations (filter pushdown, broadcast join). Spark UI screenshots prove physical plan and stage metrics. | `SparkUI_Plan.jpg`, `SparkUI_Stages.jpg`, `SparkUI_Environment.jpg` |
 | **7. Actions vs Transformations (10 pts)**  | Demonstrated lazy transformations (`map`, `filter`) and eager actions (`take`).                                                                                 | `Actions_vs_Transformations.jpg`                                    |
-| **8. Caching Bonus (5 pts)**                | Used `.cache()` on `sql2` DataFrame and timed runs to show speedup.                                                                                             | `Cache_Bonus.jpg`                                                   |
-| **9. MLlib Bonus (5 pts)**                  | Simple `KMeans(k=3)` on `trip_distance` and `total_amount` features to cluster trips by length × fare.                                                          | `MLLib_Clusters.jpg`, `MLLib_Centers.jpg`                           |
+| **8. Caching Bonus (5 pts)**                | Used `.cache()` on `sql2` DataFrame and timed runs to show speedup.                                                                                             | `SpeedUp.jpg`                                                   |
+| **9. MLlib Bonus (5 pts)**                  | Simple `KMeans(k=3)` on `trip_distance` and `total_amount` features to cluster trips by length × fare.                                                          | `K_Means.jpg`                           |
 
+5. Performance Analysis Summary
 
+Predicate Pushdown: Spark pruned unneeded columns and applied filters (fare_amount>0, passenger_count≥1) at read time.
+
+Broadcast Join: Zone lookup (265 rows) was broadcast to workers — confirmed in plan as BroadcastHashJoin.
+
+Shuffle Optimization: coalesce(4) reduced output file count and shuffle partitions.
+
+Whole-Stage Codegen: Visible in .explain() — Spark combined stages for vectorized execution.
+
+Caching Test: Second and third count() actions ran ≈ 3–4× faster after .cache() materialization.
+
+7. Key Findings
+
+Top Revenue Zones: Midtown, JFK Airport, LaGuardia are highest earners each month.
+
+Average Tip Rates: ~20–25% for short urban rides, lower for airport trips.
+
+MLlib Clusters: 3 natural segments emerged — short/cheap, medium/average, long/high-fare rides.
