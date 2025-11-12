@@ -8276,7 +8276,64 @@ None
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c7d0b1be-9c0b-42b5-bb2d-857c9be2d3fa">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c7d0b1be-9c0b-42b5-bb2d-857c9be2d3fa">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">pyspark.ml.feature</span> <span class="kn">import</span> <span class="n">VectorAssembler</span>
+<span class="kn">from</span> <span class="nn">pyspark.ml.clustering</span> <span class="kn">import</span> <span class="n">KMeans</span>
+
+<span class="c1"># 1. Select a clean subset of numeric columns</span>
+<span class="n">feat_df</span> <span class="o">=</span> <span class="n">joined</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"trip_distance"</span><span class="p">,</span> <span class="s2">"total_amount"</span><span class="p">)</span><span class="o">.</span><span class="n">na</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+
+<span class="c1"># 2. Assemble features into a single vector column</span>
+<span class="n">assembler</span> <span class="o">=</span> <span class="n">VectorAssembler</span><span class="p">(</span><span class="n">inputCols</span><span class="o">=</span><span class="p">[</span><span class="s2">"trip_distance"</span><span class="p">,</span> <span class="s2">"total_amount"</span><span class="p">],</span> <span class="n">outputCol</span><span class="o">=</span><span class="s2">"features"</span><span class="p">)</span>
+<span class="n">vec_df</span> <span class="o">=</span> <span class="n">assembler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">feat_df</span><span class="p">)</span>
+
+<span class="c1"># 3. Fit a simple 3-cluster KMeans model</span>
+<span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">vec_df</span><span class="p">)</span>
+
+<span class="c1"># 4. Apply the model and inspect clusters</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">vec_df</span><span class="p">)</span>
+<span class="n">pred</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s2">"prediction"</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># 5. Print cluster centers for evidence</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">center</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">clusterCenters</span><span class="p">()):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cluster </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> center:"</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>+----------+-------+
+|prediction|  count|
++----------+-------+
+|         1| 977474|
+|         2|     55|
+|         0|7829982|
++----------+-------+
+
+Cluster 0 center: [ 2.08888806 21.10837877]
+Cluster 1 center: [14.00071814 80.02633416]
+Cluster 2 center: [9745.13945455   44.63927273]
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1cd7076b-cbc3-42aa-8620-ff6f9ad9a421">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
